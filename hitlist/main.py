@@ -1,16 +1,13 @@
 import click
 
-from .queries import delete_job_id, insert_job, list_jobs
-from .database import init_db
-
-STATUS_CHOICES = {
-    "p": "applied",
-    "i": "interviewed",
-    "r": "rejected",
-    "a": "accepted",
-    "d": "declined",
-    "g": "ghosted",
-}
+from .logic import (
+    STATUS_PROMPT,
+    add_job,
+    delete_jobs,
+    list_jobs,
+    truncate_jobs,
+    update_job,
+)
 
 
 @click.group()
@@ -18,51 +15,74 @@ def cli():
     pass
 
 
-@cli.command()
-def init():
-    init_db()
-    click.echo("\nHITLIST IS ALIVE!!\n")
-
-
-@cli.command()
+@cli.command(name="add")
 @click.option("--role", prompt="Enter job role", type=str)
 @click.option("--company", prompt="Enter company name", type=str)
 @click.option("--location", prompt="Enter Job Location", type=str)
 @click.option("--pay", prompt="Enter est. monthly Pay", type=int)
 @click.option(
     "--status",
-    prompt="Status \n[p=applied, i=interviewed, r=rejected, a=accepted, d=declined, g=ghosted]",
+    prompt=STATUS_PROMPT,
     type=str,
 )
-def add(role, company, location, pay, status):
-    insert_job(role, company, location, pay, STATUS_CHOICES[status.lower()])
-    click.echo(
-        f"\nAdded {role} at {company} currently {STATUS_CHOICES[status.lower()]}.\n"
-    )
+def add_command(role, company, location, pay, status):
+    try:
+        click.echo(add_job(role, company, location, pay, status))
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
 
 
-@cli.command()
+@cli.command(name="update")
+@click.argument("id", type=int)
+@click.option("--role", required=False, type=str)
+@click.option("--company", required=False, type=str)
+@click.option("--location", required=False, type=str)
+@click.option("--pay", required=False, type=int)
+@click.option("--status", required=False, type=str)
+def update_command(id, role, company, location, pay, status):
+    try:
+        click.echo(
+            update_job(
+                job_id=id,
+                role=role,
+                company=company,
+                location=location,
+                pay=pay,
+                status=status,
+            )
+        )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+
+@cli.command(name="delete")
 @click.argument("id", required=False, type=int)
-def delete(id):
-    if id is not None:
-        delete_job_id(id)
-        click.echo(f"\nJob #{id} deleted successfully.\n")
+@click.option("--role", required=False, type=str)
+@click.option("--company", required=False, type=str)
+@click.option("--status", required=False, type=str)
+def delete_command(id, role, company, status):
+    try:
+        click.echo(delete_jobs(job_id=id, role=role, company=company, status=status))
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
 
 
-@cli.command()
-def list():
-    jobs = list_jobs()
+@cli.command(name="list")
+@click.option("--status", required=False, type=str)
+def list_command(status):
+    try:
+        click.echo(list_jobs(status=status))
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
 
-    if not jobs:
-        click.echo("\nNo jobs found.\n")
-        return
 
-    output = []
-    for job in jobs:
-        line = f"{job['id']} | {job['role']} | {job['company']} | {job['location']} | {job['pay']} | {job['status']}"
-        output.append(line)
-
-    click.echo("\n".join(output))
+@cli.command(name="truncate")
+@click.option("--choice", prompt="Please confirm to truncate all jobs(y/n)", type=str)
+def truncate_command(choice):
+    try:
+        click.echo(truncate_jobs(choice))
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
 
 
 if __name__ == "__main__":

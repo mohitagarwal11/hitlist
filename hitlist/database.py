@@ -1,43 +1,48 @@
 import sqlite3
 
+DATABASE_NAME = "hitlist.db"
+SCHEMA = """
+    CREATE TABLE IF NOT EXISTS hitlist(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        role VARCHAR(100) NOT NULL,
+        company VARCHAR(100) NOT NULL,
+        location VARCHAR(100) NOT NULL,
+        pay DECIMAL(10,2) NOT NULL,
+        status VARCHAR(100) NOT NULL
+    )
+"""
 
-# to get a connection with the sqlite db
+
 def get_connection():
-    con = sqlite3.connect("hitlist.db")
+    con = sqlite3.connect(DATABASE_NAME)
+
     con.row_factory = sqlite3.Row
     return con
 
 
-# custom execute wrapper so i can get outputs or no outputs depending on fetch param
-def execute(query, params=(), fetch=False):
-    con = get_connection()
+def ensure_schema(con):
     cursor = con.cursor()
-    cursor.execute(query, params)
-
-    if fetch:
-        result = cursor.fetchall()
-    else:
-        result = None
-
-    con.commit()
-    con.close()
-    return result
+    cursor.execute(SCHEMA)
 
 
-def init_db():
-    query = """
-        CREATE TABLE IF NOT EXISTS hitlist(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            role VARCHAR(100) NOT NULL,
-            company VARCHAR(100) NOT NULL,
-            location VARCHAR(100) NOT NULL,
-            pay DECIMAL(10,2) NOT NULL,
-            status VARCHAR(100) NOT NULL
-        )
-    """
-    con = get_connection()
-    cur = con.cursor()
-    cur.execute(query)
+def execute(query, params=(), fetch=False, return_rowcount=False):
+    con = None
+    try:
+        con = get_connection()
+        ensure_schema(con)
+        cursor = con.cursor()
+        cursor.execute(query, params)
+        rowcount = cursor.rowcount
 
-    con.commit()
-    con.close()
+        if fetch:
+            result = cursor.fetchall()
+        elif return_rowcount:
+            result = rowcount
+        else:
+            result = None
+
+        con.commit()
+        return result
+    finally:
+        if con is not None:
+            con.close()

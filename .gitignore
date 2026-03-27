@@ -1,6 +1,10 @@
-venv
+venv/
+.venv/
 TODO
 
-__pycache__
-hitlist.egg-info
+__pycache__/
+hitlist.egg-info/
 hitlist.db
+hitlist.db-journal
+hitlist.db-shm
+hitlist.db-wal
