@@ -1,0 +1,6 @@
+venv
+TODO
+
+__pycache__
+hitlist.egg-info
+hitlist.db
