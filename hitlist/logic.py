@@ -102,15 +102,35 @@ def delete_jobs(job_id=None, role=None, company=None, status=None):
 
 def truncate_jobs(choice):
     if choice.lower() != "y":
-        return "Truncate cancelled."
+        return "Delete all cancelled."
 
     truncate_jobs_query()
-    return "Truncated all jobs."
+    return "Deleted all jobs."
 
 
-def list_jobs(status=None):
+def list_jobs(status=None, role=None, location=None, sort=None):
     normalized_status = normalize_status(status) if status else None
-    jobs = fetch_jobs(status=normalized_status)
+
+    sort_key = "id"
+    order = "ASC"
+    if sort:
+        token = sort.lower()
+        if token in {"p", "pay"}:
+            sort_key = "pay"
+            order = "DESC"
+        elif token in {"i", "id"}:
+            sort_key = "id"
+            order = "ASC"
+        else:
+            raise ValueError("Invalid sort. Use p/pay or i/id.")
+
+    jobs = fetch_jobs(
+        status=normalized_status,
+        role=role,
+        location=location,
+        sort=sort_key,
+        order=order,
+    )
 
     if not jobs:
         return "No jobs found."

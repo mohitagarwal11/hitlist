@@ -69,15 +69,18 @@ def delete_command(id, role, company, status):
 
 @cli.command(name="list")
 @click.option("--status", required=False, type=str)
-def list_command(status):
+@click.option("--role", required=False, type=str)
+@click.option("--location", required=False, type=str)
+@click.option("--sort", type=str, prompt="Sort: pay(p) / id(i)")
+def list_command(status, role, location, sort):
     try:
-        click.echo(list_jobs(status=status))
+        click.echo(list_jobs(status, role, location, sort))
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
 
 
-@cli.command(name="truncate")
-@click.option("--choice", prompt="Please confirm to truncate all jobs(y/n)", type=str)
+@cli.command(name="drop")
+@click.option("--choice", prompt="Please confirm to delete all jobs(y/n)", type=str)
 def truncate_command(choice):
     try:
         click.echo(truncate_jobs(choice))

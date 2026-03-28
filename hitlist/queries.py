@@ -9,22 +9,36 @@ def insert_job(role, company, location, pay, status):
     execute(query, (role, company, location, pay, status))
 
 
-def fetch_jobs(status=None):
-    if status:
-        query = """
-            SELECT *
-            FROM hitlist
-            WHERE status = ?
-            ORDER BY id
-        """
-        return execute(query, (status,), fetch=True)
+def fetch_jobs(status=None, role=None, location=None, sort=None, order=None):
+    filters = []
+    params = []
 
-    query = """
+    if status is not None:
+        filters.append("status = ?")
+        params.append(status)
+
+    if role is not None:
+        filters.append("role = ?")
+        params.append(role)
+
+    if location is not None:
+        filters.append("location = ?")
+        params.append(location)
+
+    where_clause = ""
+    if filters:
+        where_clause = "WHERE " + " AND ".join(filters)
+
+    order_column = sort if sort in {"id", "pay"} else "id"
+    order_direction = "DESC" if order == "DESC" else "ASC"
+
+    query = f"""
         SELECT *
         FROM hitlist
-        ORDER BY id
+        {where_clause}
+        ORDER BY {order_column} {order_direction}
     """
-    return execute(query, fetch=True)
+    return execute(query, tuple(params), fetch=True)
 
 
 def fetch_job_by_id(job_id):
