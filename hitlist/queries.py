@@ -6,7 +6,7 @@ def insert_job(role, company, location, pay, status):
         INSERT INTO hitlist (role, company, location, pay, status)
         VALUES (?, ?, ?, ?, ?)
     """
-    execute(query, (role, company, location, pay, status))
+    return execute(query, (role, company, location, pay, status), return_lastrowid=True)
 
 
 def fetch_jobs(status=None, role=None, location=None, sort=None, order=None):

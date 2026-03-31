@@ -7,6 +7,7 @@ from .logic import (
     list_jobs,
     truncate_jobs,
     update_job,
+    format_job,
 )
 
 
@@ -27,7 +28,9 @@ def cli():
 )
 def add_command(role, company, location, pay, status):
     try:
-        click.echo(add_job(role, company, location, pay, status))
+        click.echo(
+            f"Job Added: {format_job(add_job(role, company, location, pay, status))}"
+        )
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
 

@@ -25,23 +25,30 @@ def ensure_schema(con):
     cursor.execute(SCHEMA)
 
 
-def execute(query, params=(), fetch=False, return_rowcount=False):
+def execute(
+    query,
+    params=(),
+    fetch=False,
+    return_rowcount=False,
+    return_lastrowid=False,
+):
     con = None
     try:
         con = get_connection()
         ensure_schema(con)
         cursor = con.cursor()
         cursor.execute(query, params)
-        rowcount = cursor.rowcount
+        con.commit()
 
         if fetch:
             result = cursor.fetchall()
+        elif return_lastrowid:
+            result = cursor.lastrowid
         elif return_rowcount:
-            result = rowcount
+            result = cursor.rowcount
         else:
             result = None
 
-        con.commit()
         return result
     finally:
         if con is not None:

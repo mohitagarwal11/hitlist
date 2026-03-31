@@ -27,8 +27,8 @@ STATUS_PROMPT = (
 
 def add_job(role, company, location, pay, status):
     normalized_status = normalize_status(status)
-    insert_job(role, company, location, pay, normalized_status)
-    return f"Added {role} at {company} currently {normalized_status}."
+    job_id = insert_job(role, company, location, pay, normalized_status)
+    return dict(fetch_job_by_id(job_id))
 
 
 def update_job(job_id, role=None, company=None, location=None, pay=None, status=None):
