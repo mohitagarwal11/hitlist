@@ -77,7 +77,12 @@ def delete_command(id, role, company, status):
 @click.option("--sort", type=str, prompt="Sort: pay(p) / id(i)")
 def list_command(status, role, location, sort):
     try:
-        click.echo(list_jobs(status, role, location, sort))
+        jobs = list_jobs(status, role, location, sort)
+        if not jobs:
+            click.echo("No jobs found.")
+            return
+        values = [format_job(job) for job in jobs]
+        click.echo("\n".join(values))
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
 

@@ -133,9 +133,9 @@ def list_jobs(status=None, role=None, location=None, sort=None):
     )
 
     if not jobs:
-        return "No jobs found."
+        return []
 
-    return "\n".join(format_job(job) for job in jobs)
+    return [dict(job) for job in jobs]
 
 
 def normalize_status(status):
