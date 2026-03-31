@@ -52,60 +52,49 @@ def update_job(job_id, role=None, company=None, location=None, pay=None, status=
     if not updates:
         raise ValueError("Provide at least one field to update.")
 
-    if fetch_job_by_id(job_id) is None:
+    job = fetch_job_by_id(job_id)
+
+    if job is None:
         raise ValueError(f"Job #{job_id} not found.")
 
     update_job_by_id(job_id, updates)
-    updated_job = fetch_job_by_id(job_id)
-    return f"Updated job #{job_id}.\n{format_job(updated_job)}"
+    return dict(fetch_job_by_id(job_id))
 
 
 def delete_jobs(job_id=None, role=None, company=None, status=None):
-    actions = []
-
+    deleted_count = 0
     if job_id is not None:
-        deleted_count = delete_job_by_id(job_id)
-        if deleted_count:
-            actions.append(f"Deleted job #{job_id}.")
+        if delete_job_by_id(job_id):
+            deleted_count += 1
         else:
-            actions.append(f"Job #{job_id} not found.")
+            raise ValueError(f"Job #{job_id} not found.")
 
     if role or company:
         if not (role and company):
             raise ValueError("Both role and company are required to delete by role.")
 
-        deleted_count = delete_job_by_role_company(role, company)
-        if deleted_count:
-            actions.append(
-                f"Deleted {format_count(deleted_count, 'job')} for {role} at {company}."
-            )
+        rowCount = delete_job_by_role_company(role, company)
+        if rowCount > 0:
+            deleted_count += rowCount
         else:
-            actions.append(f"No jobs found for {role} at {company}.")
+            raise ValueError(f"No jobs found for {role} at {company}.")
 
     if status:
         normalized_status = normalize_status(status)
-        deleted_count = delete_jobs_by_status(normalized_status)
-        if deleted_count:
-            actions.append(
-                f"Deleted {format_count(deleted_count, 'job')} with status {normalized_status}."
-            )
+        rowCount = delete_jobs_by_status(normalized_status)
+        if rowCount > 0:
+            deleted_count += rowCount
         else:
-            actions.append(f"No jobs found with status {normalized_status}.")
+            raise ValueError(f"No jobs found with status {normalized_status}.")
 
-    if not actions:
-        raise ValueError(
-            "Provide at least one delete filter: id, role with company, or status."
-        )
-
-    return "\n".join(actions)
+    return deleted_count
 
 
 def truncate_jobs(choice):
     if choice.lower() != "y":
-        return "Delete all cancelled."
+        return {"deleted_count": 0, "cancelled": True}
 
-    truncate_jobs_query()
-    return "Deleted all jobs."
+    return {"deleted_count": truncate_jobs_query(), "cancelled": False}
 
 
 def list_jobs(status=None, role=None, location=None, sort=None):

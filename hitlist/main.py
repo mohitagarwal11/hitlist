@@ -45,14 +45,16 @@ def add_command(role, company, location, pay, status):
 def update_command(id, role, company, location, pay, status):
     try:
         click.echo(
-            update_job(
-                job_id=id,
-                role=role,
-                company=company,
-                location=location,
-                pay=pay,
-                status=status,
-            )
+            f"Updated Job: {format_job(
+                update_job(
+                    job_id=id,
+                    role=role,
+                    company=company,
+                    location=location,
+                    pay=pay,
+                    status=status,
+                )
+            )}"
         )
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
@@ -65,7 +67,9 @@ def update_command(id, role, company, location, pay, status):
 @click.option("--status", required=False, type=str)
 def delete_command(id, role, company, status):
     try:
-        click.echo(delete_jobs(job_id=id, role=role, company=company, status=status))
+        click.echo(
+            f"Deleted rows: {delete_jobs(job_id=id, role=role, company=company, status=status)}"
+        )
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
 
@@ -91,7 +95,12 @@ def list_command(status, role, location, sort):
 @click.option("--choice", prompt="Please confirm to delete all jobs(y/n)", type=str)
 def truncate_command(choice):
     try:
-        click.echo(truncate_jobs(choice))
+        result = truncate_jobs(choice)
+        if result["cancelled"]:
+            click.echo("Delete all cancelled.")
+            return
+
+        click.echo("Deleted all jobs.")
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
 
